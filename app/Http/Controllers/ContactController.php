@@ -21,7 +21,7 @@ class ContactController extends Controller
         $contact->phone_number = $request->phone_number;
         $contact->expiration_date = $request->expiration_date;
         $contact->save();
-        return $contact;
+        return $contact->id;
     }
 
     public function update (Request $request, $id)
