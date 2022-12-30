@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class MessageController extends Controller
 {
-    public function payReminder(Request $request) {
+    public function payReminder($contactId) {
+        $contact = Contact::find($contactId);
         $template_name = 'reminder_auto_insurrance';
-        $user_name = $request->first_name . ' ' . $request->last_name;
-        $insurance_number = $request->policy_number;
-        $expiration_date = $request->expiration_date;
-        //$recipient_number = "77773344869";
-        $recipient_number = $request->phone_number;
+        $user_name = 'Гульжан Сагидолловна'; //$contact->first_name . ' ' . $contact->last_name;
+        $insurance_number = '123456'; //$contact->policy_number;
+        $expiration_date = $this->formatDateForKazakhstan($contact->expiration_date);
+        $recipient_number = $contact->phone_number;
 
         $parameters = [];
         $params1 = new \stdClass();
@@ -48,14 +50,32 @@ class MessageController extends Controller
         $body->type = 'template';
         $body->template = $template;
 
-        //return $body;
-
         $baseUrl = 'https://graph.facebook.com/';
         $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
-
-        return Http::withToken(env('WA_USER_ACCESS_TOKEN'))
+        Http::withToken(env('WA_USER_ACCESS_TOKEN'))
             ->withBody(json_encode($body), 'application/json')
             ->post($url);
+
+        $contact->last_sent_at = new DateTime();
+        $contact->save();
+
+        return $contact;
     }
+
+    private function formatDateForKazakhstan($dateString) {
+        $date = new DateTime($dateString);
+
+        $monthNames = array(
+            "янв", "фев", "мар", "апр", "май", "июн",
+            "июл", "авг", "сен", "окт", "ноя", "дек"
+        );
+
+        $monthIndex = $date->format('n') - 1;
+
+        $monthName = $monthNames[$monthIndex];
+
+        return $date->format('j') . " " . $monthName . " " . $date->format('Y');
+    }
+
 }
 

@@ -16,6 +16,7 @@ class Contact extends Model
         'phone_number',
         'policy_number',
         'expiration_date',
-        'deleted_at'
+        'deleted_at',
+        'last_sent_at',
     ];
 }

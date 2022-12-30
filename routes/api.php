@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/payReminder', 'App\Http\Controllers\MessageController@payReminder');
+Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
 
 Route::prefix('contacts')->group(function () {
     Route::get('/', 'App\Http\Controllers\ContactController@index');
@@ -23,7 +23,7 @@ Route::prefix('contacts')->group(function () {
 
     Route::post('/', 'App\Http\Controllers\ContactController@create');
 
-    Route::patch('/{id}', 'App\Http\Controllers\ContactController@update');
+    Route::put('/{id}', 'App\Http\Controllers\ContactController@update');
 
     Route::delete('/{id}', 'App\Http\Controllers\ContactController@delete');
 });
