@@ -14,16 +14,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::post('/logout', 'AuthController@logout');
 
-Route::prefix('contacts')->group(function () {
-    Route::get('/', 'App\Http\Controllers\ContactController@index');
+    Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
 
-    Route::get('/{id}', 'App\Http\Controllers\ContactController@show');
+    Route::prefix('contacts')->group(function () {
+        Route::get('/', 'App\Http\Controllers\ContactController@index');
 
-    Route::post('/', 'App\Http\Controllers\ContactController@create');
+        Route::get('/{id}', 'App\Http\Controllers\ContactController@show');
 
-    Route::put('/{id}', 'App\Http\Controllers\ContactController@update');
+        Route::post('/', 'App\Http\Controllers\ContactController@create');
 
-    Route::delete('/{id}', 'App\Http\Controllers\ContactController@delete');
+        Route::put('/{id}', 'App\Http\Controllers\ContactController@update');
+
+        Route::delete('/{id}', 'App\Http\Controllers\ContactController@delete');
+    });
 });
+
+Route::post('/login', 'App\Http\Controllers\AuthController@login');
