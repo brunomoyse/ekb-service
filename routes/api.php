@@ -32,4 +32,4 @@ Route::group(['middleware' => 'auth:api'], function () {
     });
 });
 
-Route::post('/login', 'App\Http\Controllers\AuthController@login');
+Route::post('/login', 'App\Http\Controllers\AuthController@login')->name('login');
