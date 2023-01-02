@@ -9,17 +9,17 @@ class ContactController extends Controller
 {
     public function index()
     {
-        return Contact::orderBy('expiration_date', 'asc')->get();
+        return Contact::orderBy('contract_end_date', 'asc')->get();
     }
 
     public function create(Request $request)
     {
         $contact = new Contact();
-        //$contact->first_name = $request->first_name;
-        //$contact->last_name = $request->last_name;
-        //$contact->policy_number = $request->policy_number;
         $contact->phone_number = $request->phone_number;
-        $contact->expiration_date = $request->expiration_date;
+        $contact->policy_holder = $request->policy_holder;
+        $contact->contract_start_date = $request->contract_start_date;
+        $contact->contract_end_date = $request->contract_end_date;
+        $contact->registration_number = $request->registration_number;
         $contact->save();
         return $contact->id;
     }
@@ -27,11 +27,11 @@ class ContactController extends Controller
     public function update (Request $request, $id)
     {
         $contact = Contact::find($id);
-        //$contact->first_name = $request->first_name;
-        //$contact->last_name = $request->last_name;
-        //$contact->policy_number = $request->policy_number;
         $contact->phone_number = $request->phone_number;
-        $contact->expiration_date = $request->expiration_date;
+        $contact->policy_holder = $request->policy_holder;
+        $contact->contract_start_date = $request->contract_start_date;
+        $contact->contract_end_date = $request->contract_end_date;
+        $contact->registration_number = $request->registration_number;
         $contact->save();
         return $contact;
     }

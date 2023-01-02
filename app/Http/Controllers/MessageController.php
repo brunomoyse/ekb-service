@@ -11,23 +11,24 @@ class MessageController extends Controller
 {
     public function payReminder($contactId) {
         $contact = Contact::find($contactId);
-        $template_name = 'reminder_auto_insurrance';
-        $user_name = 'Гульжан Сагидолловна'; //$contact->first_name . ' ' . $contact->last_name;
-        $insurance_number = '123456'; //$contact->policy_number;
-        $expiration_date = $this->formatDateForKazakhstan($contact->expiration_date);
+        $template_name = 'auto_reminder';
+        // $template_name = 'reminder_auto_insurrance';
+        // $user_name = $contact->policy_holder ?: '';
+        // $insurance_number = $contact->registration_number;
+        $expiration_date = $this->formatDateForKazakhstan($contact->contract_end_date);
         $recipient_number = $contact->phone_number;
 
         $parameters = [];
-        $params1 = new \stdClass();
-        $params1->type = 'text';
-        $params1->text = $user_name;
-        $params2 = new \stdClass();
-        $params2->type = 'text';
-        $params2->text = $insurance_number;
+        // $params1 = new \stdClass();
+        // $params1->type = 'text';
+        // $params1->text = $user_name;
+        // $params2 = new \stdClass();
+        // $params2->type = 'text';
+        // $params2->text = $insurance_number;
         $params3 = new \stdClass();
         $params3->type = 'text';
         $params3->text = $expiration_date;
-        array_push($parameters, $params1, $params2, $params3);
+        array_push($parameters, $params3);
 
         $components = [];
         $component = new \stdClass();
