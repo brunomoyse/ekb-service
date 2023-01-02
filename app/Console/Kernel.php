@@ -2,25 +2,26 @@
 
 namespace App\Console;
 
+use App\Http\Controllers\MessageController;
+use App\Models\Contact;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 
 class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function () {
-            $contacts = DB::table('contacts')->get();
-            // for each contact, check if the expiration date is within a month + check if already sent
+            // Retrieve all contacts where contract_end_date is within the next 5 days and last_sent_at is null
+            $contacts = Contact::where('contract_end_date', '<=', Carbon::now()->addDays(5))
+                ->whereNull('last_sent_at')
+                ->get();
+
             foreach ($contacts as $contact) {
-                if ($contact->expiration_date < Carbon::now()->addMonth() && empty($contact->last_sent_at)) {
-                    App::call('App\Http\Controllers\ContactController@payReminder', ['id' => $contact->id]);
-                }
+                app(MessageController::class)->payReminder($contact->id);
             }
-        })->dailyAt('12:00');
+        })->dailyAt('03:30');
     }
 
     /**
