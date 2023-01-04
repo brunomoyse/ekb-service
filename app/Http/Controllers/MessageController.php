@@ -11,7 +11,7 @@ class MessageController extends Controller
 {
     public function payReminder($contactId) {
         $contact = Contact::find($contactId);
-        $template_name = 'auto_reminder';
+        $template_name = 'ins_reminder';
         // $template_name = 'reminder_auto_insurrance';
         // $user_name = $contact->policy_holder ?: '';
         // $insurance_number = $contact->registration_number;
@@ -28,8 +28,11 @@ class MessageController extends Controller
         $params3 = new \stdClass();
         $params3->type = 'text';
         $params3->text = $contract_end_date;
+        $params4 = new \stdClass();
+        $params4->type = 'text';
+        $params4->text = $contract_end_date;
 
-        array_push($parameters, $params3);
+        array_push($parameters, $params3, $params4);
 
         $components = [];
         $component = new \stdClass();

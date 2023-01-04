@@ -21,7 +21,7 @@ class Kernel extends ConsoleKernel
             foreach ($contacts as $contact) {
                 app(MessageController::class)->payReminder($contact->id);
             }
-        })->dailyAt('03:30');
+        })->dailyAt('17:07');
     }
 
     /**
