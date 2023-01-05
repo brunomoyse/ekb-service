@@ -6,6 +6,7 @@ use App\Models\Contact;
 use DateTime;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class MessageController extends Controller
@@ -58,10 +59,9 @@ class MessageController extends Controller
 
         $baseUrl = 'https://graph.facebook.com/';
         $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
-        $test = Http::withToken(env('WA_USER_ACCESS_TOKEN'))
+        Http::withToken(env('WA_USER_ACCESS_TOKEN'))
             ->withBody(json_encode($body), 'application/json')
             ->post($url);
-        var_dump($test);
         $contact->last_sent_at = new DateTime();
         $contact->save();
 
@@ -83,7 +83,75 @@ class MessageController extends Controller
         } catch (Exception $e){
             return response($e->getMessage(), 500);
         }
+    }
 
+    public function processWebhook (Request $request) {
+        try {
+            $bodyContent = json_decode($request->getContent(), true);
+            $body = '';
+            $value = $bodyContent['entry'][0]['changes'][0]['value'];
+            $statuses = $bodyContent['entry'][0]['changes'][0]['value']['statuses'][0];
+            $updated_message_status = $statuses['status'];
+            $updated_message_recipient_id = $statuses['recipient_id'];
+            $updated_message_id = $statuses['id'];
+            if ($statuses && !empty($updated_message_status)) {
+                DB::table('messages')->insert([
+                    'phone_number' => $updated_message_recipient_id,
+                    'message_id' => $updated_message_id,
+                    'message_body' => $updated_message_status,
+                    'created_at' => new DateTime()
+                ]);
+            }
+            if (!empty($value['messages'])) {
+                if ($value['messages'][0]['type'] == 'text') {
+                    $id = $value['messages'][0]['id'];
+                    $from = $value['messages'][0]['from'];
+                    $body = $value['messages'][0]['text']['body'];
+
+                    DB::table('messages')->insert([
+                        'phone_number' => $from,
+                        'message_id' => $id,
+                        'message_body' => $body,
+                        'received_at' => new DateTime()
+                    ]);
+
+                    $template_name = 'auto_reply';
+                    $recipient_number = $from;
+
+                    $parameters = [];
+
+                    $components = [];
+                    $component = new \stdClass();
+                    $component->type = 'body';
+                    $component->parameters = $parameters;
+                    $components[] = $component;
+
+                    $language = new \stdClass();
+                    $language->policy = 'deterministic';
+                    $language->code = 'ru';
+
+                    $template = new \stdClass();
+                    $template->name = $template_name;
+                    $template->language = $language;
+                    $template->components = $components;
+
+                    $body = new \stdClass();
+                    $body->messaging_product = 'whatsapp';
+                    $body->to = $recipient_number;
+                    $body->type = 'template';
+                    $body->template = $template;
+
+                    $baseUrl = 'https://graph.facebook.com/';
+                    $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
+                    Http::withToken(env('WA_USER_ACCESS_TOKEN'))
+                        ->withBody(json_encode($body), 'application/json')
+                        ->post($url);
+
+                }
+            }
+        } catch (Exception $e){
+            return response($e->getMessage(), 500);
+        }
     }
 
     private function formatDateForKazakhstan($dateString) {
