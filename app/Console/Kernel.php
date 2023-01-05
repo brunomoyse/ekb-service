@@ -14,14 +14,14 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call(function () {
             // Retrieve all contacts where contract_end_date is within the next 5 days and last_sent_at is null
-            $contacts = Contact::where('contract_end_date', '<=', Carbon::now()->addDays(5))
+            $contacts = Contact::where('contract_end_date', '<=', Carbon::now()->addDays(3))
                 ->whereNull('last_sent_at')
                 ->get();
 
             foreach ($contacts as $contact) {
                 app(MessageController::class)->payReminder($contact->id);
             }
-        })->timezone('Asia/Almaty')->dailyAt('23:59');
+        })->timezone('Asia/Almaty')->dailyAt('10:00');
     }
 
     /**
