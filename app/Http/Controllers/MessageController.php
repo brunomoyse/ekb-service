@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use DateTime;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -65,6 +66,24 @@ class MessageController extends Controller
         $contact->save();
 
         return $contact;
+    }
+
+    public function handleVerificationRequest(Request $request)
+    {
+        try {
+            $verifyToken = env('WA_WEBHOOKS_TOKEN');
+            $query = $request->query();
+            $mode = $query['hub_mode'];
+            $challenge = $query['hub_challenge'];
+            $token = $query['hub_verify_token'];
+            if ($mode && $verifyToken === $token) {
+                return response($challenge, 200)->header('Content-Type', 'text/plain');
+            }
+            throw new Exception('Invalid request');
+        } catch (Exception $e){
+            return response($e->getMessage(), 500);
+        }
+
     }
 
     private function formatDateForKazakhstan($dateString) {
