@@ -63,13 +63,14 @@ class MessageController extends Controller
             ->withBody(json_encode($body), 'application/json')
             ->post($url);
 
-        if ($res && $res['messages'][0]['id']) {
-            $contact->last_message_id = $res['messages'][0]['id'];
-            $contact->last_sent_at = new DateTime();
-            $contact->save();
-        } else {
-            $contact->last_message_status = 'sent failed';
-        }
+        if ($res->status() === 200) {
+            if ($res['messages'][0]['id']) {
+                $contact->last_message_id = $res['messages'][0]['id'];
+                $contact->last_message_status = 'sent';
+            }
+        } else $contact->last_message_status = 'failed';
+        $contact->last_sent_at = new DateTime();
+        $contact->save();
 
         return $contact;
     }
