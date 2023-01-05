@@ -13,13 +13,15 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
+
 Route::get('/webhooks', 'App\Http\Controllers\MessageController@handleVerificationRequest');
 Route::post('/webhooks', 'App\Http\Controllers\MessageController@processWebhook');
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/logout', 'AuthController@logout');
 
-    Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
+    //Route::post('/payReminder/{id}', 'App\Http\Controllers\MessageController@payReminder');
 
     Route::prefix('contacts')->group(function () {
         Route::get('/', 'App\Http\Controllers\ContactController@index');

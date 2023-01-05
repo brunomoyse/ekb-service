@@ -18,5 +18,7 @@ class Contact extends Model
         'expiration_date',
         'deleted_at',
         'last_sent_at',
+        'last_message_id',
+        'last_message_status',
     ];
 }

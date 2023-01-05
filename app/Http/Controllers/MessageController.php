@@ -59,11 +59,17 @@ class MessageController extends Controller
 
         $baseUrl = 'https://graph.facebook.com/';
         $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
-        Http::withToken(env('WA_USER_ACCESS_TOKEN'))
+        $res = Http::withToken(env('WA_USER_ACCESS_TOKEN'))
             ->withBody(json_encode($body), 'application/json')
             ->post($url);
-        $contact->last_sent_at = new DateTime();
-        $contact->save();
+
+        if ($res && $res['messages'][0]['id']) {
+            $contact->last_message_id = $res['messages'][0]['id'];
+            $contact->last_sent_at = new DateTime();
+            $contact->save();
+        } else {
+            $contact->last_message_status = 'sent failed';
+        }
 
         return $contact;
     }
@@ -95,12 +101,17 @@ class MessageController extends Controller
             $updated_message_recipient_id = $statuses['recipient_id'];
             $updated_message_id = $statuses['id'];
             if ($statuses && !empty($updated_message_status)) {
-                DB::table('messages')->insert([
-                    'phone_number' => $updated_message_recipient_id,
-                    'message_id' => $updated_message_id,
-                    'message_body' => $updated_message_status,
-                    'created_at' => new DateTime()
-                ]);
+                $contact = Contact::where('last_message_id', $updated_message_id)->first();
+                if ($contact) {
+                    $contact->last_message_status = $updated_message_status;
+                    $contact->save();
+                }
+                //DB::table('messages')->insert([
+                //    'phone_number' => $updated_message_recipient_id,
+                //    'message_id' => $updated_message_id,
+                //    'message_body' => $updated_message_status,
+                //    'created_at' => new DateTime()
+                //]);
             }
             if (!empty($value['messages'])) {
                 if ($value['messages'][0]['type'] == 'text') {
