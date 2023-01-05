@@ -9,7 +9,9 @@ class ContactController extends Controller
 {
     public function index()
     {
-        return Contact::orderBy('contract_end_date', 'asc')->get();
+        return Contact::whereDate('contract_end_date', '>=', now()->subWeeks(2))
+            ->orderBy('contract_end_date', 'asc')
+            ->get();
     }
 
     public function create(Request $request)
