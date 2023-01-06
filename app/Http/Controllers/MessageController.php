@@ -176,6 +176,8 @@ class MessageController extends Controller
         Http::withToken(env('WA_USER_ACCESS_TOKEN'))
             ->withBody(json_encode($body), 'application/json')
             ->post($url);
+        $contact = Contact::where('phone_number', $phone_number)->first();
+        $contact->last_message_auto_replied_at = new DateTime();
     }
 
     private function formatDateForKazakhstan($dateString) {
