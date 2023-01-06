@@ -95,24 +95,20 @@ class MessageController extends Controller
     public function processWebhook (Request $request) {
         try {
             $bodyContent = json_decode($request->getContent(), true);
-            $body = '';
             $value = $bodyContent['entry'][0]['changes'][0]['value'];
-            $statuses = $bodyContent['entry'][0]['changes'][0]['value']['statuses'][0];
-            $updated_message_status = $statuses['status'];
-            $updated_message_recipient_id = $statuses['recipient_id'];
-            $updated_message_id = $statuses['id'];
-            if ($statuses && !empty($updated_message_status)) {
+            if (isset($value['statuses'][0])) {
+                $statuses = $bodyContent['entry'][0]['changes'][0]['value']['statuses'][0];
+                $updated_message_status = $statuses['status'];
+                $updated_message_recipient_id = $statuses['recipient_id'];
+                $updated_message_id = $statuses['id'];
+            }
+
+            if (isset($statuses) && !empty($updated_message_status)) {
                 $contact = Contact::where('last_message_id', $updated_message_id)->first();
                 if ($contact) {
                     $contact->last_message_status = $updated_message_status;
                     $contact->save();
                 }
-                //DB::table('messages')->insert([
-                //    'phone_number' => $updated_message_recipient_id,
-                //    'message_id' => $updated_message_id,
-                //    'message_body' => $updated_message_status,
-                //    'created_at' => new DateTime()
-                //]);
             }
             if (!empty($value['messages'])) {
                 if ($value['messages'][0]['type'] == 'text') {
