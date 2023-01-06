@@ -11,6 +11,7 @@ class ContactController extends Controller
     {
         return Contact::whereDate('contract_end_date', '>=', now()->subWeeks(2))
             ->orderBy('contract_end_date', 'asc')
+            ->orderBy('phone_number', 'asc')
             ->get();
     }
 

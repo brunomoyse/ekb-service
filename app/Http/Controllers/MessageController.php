@@ -124,7 +124,6 @@ class MessageController extends Controller
                         'phone_number' => $from,
                         'message_id' => $id,
                         'message_body' => $body,
-                        'received_at' => new DateTime()
                     ]);
 
                     $template_name = 'auto_reply';
