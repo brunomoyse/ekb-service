@@ -20,5 +20,6 @@ class Contact extends Model
         'last_sent_at',
         'last_message_id',
         'last_message_status',
+        'last_message_auto_replied_at'
     ];
 }

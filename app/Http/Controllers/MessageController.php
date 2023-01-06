@@ -96,69 +96,86 @@ class MessageController extends Controller
         try {
             $bodyContent = json_decode($request->getContent(), true);
             $value = $bodyContent['entry'][0]['changes'][0]['value'];
+
+            // STATUS
             if (isset($value['statuses'][0])) {
                 $statuses = $bodyContent['entry'][0]['changes'][0]['value']['statuses'][0];
                 $updated_message_status = $statuses['status'];
                 $updated_message_recipient_id = $statuses['recipient_id'];
                 $updated_message_id = $statuses['id'];
-            }
-
-            if (isset($statuses) && !empty($updated_message_status)) {
-                $contact = Contact::where('last_message_id', $updated_message_id)->first();
-                if ($contact) {
-                    $contact->last_message_status = $updated_message_status;
-                    $contact->save();
+                if (isset($statuses) && !empty($updated_message_status)) {
+                    $contact = Contact::where('last_message_id', $updated_message_id)->first();
+                    if ($contact) {
+                        $contact->last_message_status = $updated_message_status;
+                        $contact->save();
+                    }
                 }
             }
+
+            // MESSAGES
             if (!empty($value['messages'])) {
                 if ($value['messages'][0]['type'] == 'text') {
                     $id = $value['messages'][0]['id'];
-                    $from = $value['messages'][0]['from'];
+                    $phone_number = $value['messages'][0]['from'];
                     $body = $value['messages'][0]['text']['body'];
 
+                    $contact = Contact::where('phone_number', $phone_number)->first();
+                    if (isset($contact->last_message_auto_replied_at)) {
+                        $date = new DateTime();
+                        $date->modify('-24 hours');
+                        $formattedDate = $date->format('Y-m-d H:i:s');
+                        if ($contact->last_message_auto_replied_at < $formattedDate) {
+                            // if already sent > 24 hours ago
+                            $this->sendAutoReply($phone_number);
+                        }
+                    } else {
+                        $this->sendAutoReply($phone_number);
+                    }
                     DB::table('messages')->insert([
-                        'phone_number' => $from,
+                        'phone_number' => $phone_number,
                         'message_id' => $id,
                         'message_body' => $body,
+                        'created_at' => now(),
                     ]);
-
-                    $template_name = 'auto_reply';
-                    $recipient_number = $from;
-
-                    $parameters = [];
-
-                    $components = [];
-                    $component = new \stdClass();
-                    $component->type = 'body';
-                    $component->parameters = $parameters;
-                    $components[] = $component;
-
-                    $language = new \stdClass();
-                    $language->policy = 'deterministic';
-                    $language->code = 'ru';
-
-                    $template = new \stdClass();
-                    $template->name = $template_name;
-                    $template->language = $language;
-                    $template->components = $components;
-
-                    $body = new \stdClass();
-                    $body->messaging_product = 'whatsapp';
-                    $body->to = $recipient_number;
-                    $body->type = 'template';
-                    $body->template = $template;
-
-                    $baseUrl = 'https://graph.facebook.com/';
-                    $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
-                    Http::withToken(env('WA_USER_ACCESS_TOKEN'))
-                        ->withBody(json_encode($body), 'application/json')
-                        ->post($url);
-
                 }
             }
         } catch (Exception $e){
             return response($e->getMessage(), 500);
         }
+    }
+
+    private function sendAutoReply($phone_number) {
+        $template_name = 'auto_reply';
+        $recipient_number = $phone_number;
+
+        $parameters = [];
+
+        $components = [];
+        $component = new \stdClass();
+        $component->type = 'body';
+        $component->parameters = $parameters;
+        $components[] = $component;
+
+        $language = new \stdClass();
+        $language->policy = 'deterministic';
+        $language->code = 'ru';
+
+        $template = new \stdClass();
+        $template->name = $template_name;
+        $template->language = $language;
+        $template->components = $components;
+
+        $body = new \stdClass();
+        $body->messaging_product = 'whatsapp';
+        $body->to = $recipient_number;
+        $body->type = 'template';
+        $body->template = $template;
+
+        $baseUrl = 'https://graph.facebook.com/';
+        $url = $baseUrl . env('WA_VERSION') . '/' . env('WA_PHONE_NUMBER_ID') . '/messages';
+        Http::withToken(env('WA_USER_ACCESS_TOKEN'))
+            ->withBody(json_encode($body), 'application/json')
+            ->post($url);
     }
 
     private function formatDateForKazakhstan($dateString) {
