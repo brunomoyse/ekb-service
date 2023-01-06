@@ -178,6 +178,7 @@ class MessageController extends Controller
             ->post($url);
         $contact = Contact::where('phone_number', $phone_number)->first();
         $contact->last_message_auto_replied_at = new DateTime();
+        $contact->save();
     }
 
     private function formatDateForKazakhstan($dateString) {
